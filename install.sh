@@ -9,26 +9,6 @@ root_access() {
     fi
 }
 
-# Detect Linux distribution
-detect_distribution() {
-    local supported_distributions=("ubuntu" "debian" "centos" "fedora")
-    
-    if [ -f /etc/os-release ]; then
-        source /etc/os-release
-        if [[ "${ID}" = "ubuntu" || "${ID}" = "debian" || "${ID}" = "centos" || "${ID}" = "fedora" ]]; then
-            package_manager="apt-get"
-            [ "${ID}" = "centos" ] && package_manager="yum"
-            [ "${ID}" = "fedora" ] && package_manager="dnf"
-        else
-            echo "Unsupported distribution!"
-            exit 1
-        fi
-    else
-        echo "Unsupported distribution!"
-        exit 1
-    fi
-}
-
 #Check dependencies
 check_dependencies() {
     root_access
@@ -51,16 +31,56 @@ check_installed() {
     fi
 }
 
-#Install gost
 install_gost() {
     check_installed
     check_dependencies
+
+    # Detect OS
+    OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+
+    # Detect architecture
+    ARCH=$(uname -m)
+    case $ARCH in
+        x86_64) ARCH="amd64" ;;
+        i686|i386) ARCH="386" ;;
+        armv7l) ARCH="armv7" ;;
+        armv6l) ARCH="armv6" ;;
+        armv5tel) ARCH="armv5" ;;
+        aarch64) ARCH="arm64" ;;
+        mips) ARCH="mips_softfloat" ;;
+        mipsle) ARCH="mipsle_softfloat" ;;
+        mips64) ARCH="mips64_hardfloat" ;;
+        mips64le) ARCH="mips64le_hardfloat" ;;
+        riscv64) ARCH="riscv64" ;;
+        s390x) ARCH="s390x" ;;
+    esac
+
+    # Define file extension based on OS
+    EXT="tar.gz"
+    if [ "$OS" == "windows" ]; then
+        EXT="zip"
+    fi
+
+    # Fetch the latest release (including nightly, beta, etc.)
     LATEST_VERSION=$(curl -s https://api.github.com/repos/go-gost/gost/releases | grep 'tag_name' | head -n 1 | cut -d '"' -f 4)
-    wget https://github.com/go-gost/gost/releases/download/${LATEST_VERSION}/gost-linux-amd64-${LATEST_VERSION}.gz
-    gunzip gost-linux-amd64-${LATEST_VERSION}.gz
-    sudo mv gost-linux-amd64-${LATEST_VERSION} /usr/local/bin/gost
+
+    # Construct the filename
+    FILE_NAME="gost_${LATEST_VERSION}_${OS}_${ARCH}.${EXT}"
+
+    # Download and extract the appropriate file
+    wget https://github.com/go-gost/gost/releases/download/${LATEST_VERSION}/${FILE_NAME}
+
+    if [ "$EXT" == "tar.gz" ]; then
+        tar -xzf ${FILE_NAME}
+    else
+        unzip ${FILE_NAME}
+    fi
+
+    # Move binary to /usr/local/bin
+    sudo mv gost /usr/local/bin/gost
     sudo chmod +x /usr/local/bin/gost
 }
+
 
 #get inputs for 1
 get_inputs1() {
