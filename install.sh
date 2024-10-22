@@ -110,7 +110,7 @@ install_gost() {
     # Remove the "v" from the version in the filename
     release_filename=$(echo "$latest_release" | sed 's/^v//')
 
-    # Build the download URL based on detected OS and architecture
+    # Build the correct download URL
     binary_url="https://github.com/go-gost/gost/releases/download/${latest_release}/gost_${release_filename}_${platform}_${arch}.tar.gz"
 
     echo "Downloading gost from $binary_url"
