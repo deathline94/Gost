@@ -51,15 +51,29 @@ check_installed() {
     fi
 }
 
-#Install gost
-install_gost() {
-    check_installed
-    check_dependencies
-    wget https://github.com/go-gost/gost/releases/download/v3.0.0-nightly.20241022/gost_3.0.0-nightly.20241022_linux_amd64.tar.gz
-    gunzip gost_3.0.0-nightly.20241022_linux_amd64.tar.gz
-    sudo mv gost_3.0.0-nightly.20241022_linux_amd64.tar.gz /usr/local/bin/gost
-    sudo chmod +x /usr/local/bin/gost
+# Get the latest version tag from GitHub releases
+get_latest_version() {
+    # Use GitHub's API to scrape the latest version tag from releases
+    latest_release=$(wget -qO- https://github.com/go-gost/gost/releases | grep -oP '(?<=/go-gost/gost/releases/tag/)[^"]+' | grep 'nightly' | head -n 1)
     
+    if [ -z "$latest_release" ]; then
+        echo "Failed to fetch the latest release version."
+        exit 1
+    fi
+    
+    echo "Latest release found: $latest_release"
+}
+
+# Install gost
+install_gost() {
+    get_latest_version
+    check_dependencies
+    binary_url="https://github.com/go-gost/gost/releases/download/${latest_release}/gost-linux-amd64-${latest_release}.tar.gz"
+    echo "Downloading gost from $binary_url"
+    wget "$binary_url"
+    tar -xzf "gost-linux-amd64-${latest_release}.tar.gz"
+    sudo mv gost-linux-amd64-*/gost /usr/local/bin/gost
+    sudo chmod +x /usr/local/bin/gost
 }
 
 #get inputs for 1
