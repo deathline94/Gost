@@ -3,7 +3,7 @@
 
 ## install
 ```
-bash <(curl -fsSl https://raw.githubusercontent.com/Ptechgithub/Gost/main/install.sh)
+bash <(curl -fsSl https://raw.githubusercontent.com/deathline94/Gost/main/install.sh)
 ```
 ![5](https://raw.githubusercontent.com/Ptechgithub/configs/main/media/5.jpg)
 
@@ -16,9 +16,4 @@ bash <(curl -fsSl https://raw.githubusercontent.com/Ptechgithub/Gost/main/instal
 - quic
 - ...
 
-## Gost in Termux (No root)
-
-```
-bash <(curl -fsSl https://raw.githubusercontent.com/Ptechgithub/Gost/main/Termux.sh)
-```
 ![7](https://raw.githubusercontent.com/Ptechgithub/configs/main/media/7.jpg)
