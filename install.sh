@@ -22,6 +22,33 @@ check_dependencies() {
     done
 }
 
+detect_distribution() {
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        case $ID in
+            ubuntu|debian)
+                package_manager="apt"
+                ;;
+            centos|fedora|rhel)
+                package_manager="yum"
+                ;;
+            arch)
+                package_manager="pacman"
+                ;;
+            *)
+                echo "Unsupported distribution."
+                exit 1
+                ;;
+        esac
+    else
+        echo "Cannot detect distribution. Make sure this is a supported Linux distribution."
+        exit 1
+    fi
+}
+
+detect_distribution  # Call this function after defining it.
+
+
 #Check installed service 
 check_installed() {
     if [ -f "/etc/systemd/system/gost.service" ]; then
@@ -61,7 +88,7 @@ install_gost() {
     fi
 
     # Fetch the latest release (including nightly, beta, etc.)
-    LATEST_VERSION=$(curl -s https://api.github.com/repos/go-gost/gost/releases | grep 'tag_name' | head -n 1 | cut -d '"' -f 4)
+    LATEST_VERSION=$(curl -s https://api.github.com/repos/go-gost/gost/releases/latest | grep 'tag_name' | cut -d '"' -f 4)
 
     # Construct the filename
     FILE_NAME="gost_${LATEST_VERSION}_${OS}_${ARCH}.${EXT}"
