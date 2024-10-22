@@ -15,5 +15,3 @@ bash <(curl -fsSl https://raw.githubusercontent.com/deathline94/Gost/main/instal
 - wss
 - quic
 - ...
-
-![7](https://raw.githubusercontent.com/Ptechgithub/configs/main/media/7.jpg)
