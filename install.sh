@@ -68,11 +68,12 @@ get_latest_version() {
 install_gost() {
     get_latest_version
     check_dependencies
-    binary_url="https://github.com/go-gost/gost/releases/download/${latest_release}/gost-linux-amd64-${latest_release}.tar.gz"
+    # Fixed the URL to remove the version from the filename
+    binary_url="https://github.com/go-gost/gost/releases/download/${latest_release}/gost-linux-amd64.tar.gz"
     echo "Downloading gost from $binary_url"
     wget "$binary_url"
-    tar -xzf "gost-linux-amd64-${latest_release}.tar.gz"
-    sudo mv gost-linux-amd64-*/gost /usr/local/bin/gost
+    tar -xzf "gost-linux-amd64.tar.gz"
+    sudo mv gost-linux-amd64/gost /usr/local/bin/gost
     sudo chmod +x /usr/local/bin/gost
 }
 
