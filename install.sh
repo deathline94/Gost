@@ -2,7 +2,6 @@
 
 # Check if running as root
 root_access() {
-    # Check if the  script is running as root
     if [ "$EUID" -ne 0 ]; then
         echo "Please run as root."
         exit 1
@@ -11,30 +10,76 @@ root_access() {
 
 # Detect Linux distribution
 detect_distribution() {
-    local supported_distributions=("ubuntu" "debian" "centos" "fedora")
-    
     if [ -f /etc/os-release ]; then
         source /etc/os-release
-        if [[ "${ID}" = "ubuntu" || "${ID}" = "debian" || "${ID}" = "centos" || "${ID}" = "fedora" ]]; then
-            package_manager="apt-get"
-            [ "${ID}" = "centos" ] && package_manager="yum"
-            [ "${ID}" = "fedora" ] && package_manager="dnf"
-        else
-            echo "Unsupported distribution!"
-            exit 1
-        fi
+        case "${ID}" in
+            ubuntu|debian)
+                package_manager="apt-get"
+                ;;
+            centos)
+                package_manager="yum"
+                ;;
+            fedora)
+                package_manager="dnf"
+                ;;
+            *)
+                echo "Unsupported distribution!"
+                exit 1
+                ;;
+        esac
     else
         echo "Unsupported distribution!"
         exit 1
     fi
 }
 
-#Check dependencies
+# Detect the system architecture
+detect_architecture() {
+    case "$(uname -m)" in
+        x86_64)
+            arch="amd64"
+            ;;
+        i386|i686)
+            arch="386"
+            ;;
+        armv7l)
+            arch="armv7"
+            ;;
+        aarch64)
+            arch="arm64"
+            ;;
+        *)
+            echo "Unsupported architecture: $(uname -m)"
+            exit 1
+            ;;
+    esac
+}
+
+# Detect OS platform
+detect_platform() {
+    case "$(uname)" in
+        Linux)
+            platform="linux"
+            ;;
+        FreeBSD)
+            platform="freebsd"
+            ;;
+        Darwin)
+            platform="darwin"
+            ;;
+        *)
+            echo "Unsupported platform: $(uname)"
+            exit 1
+            ;;
+    esac
+}
+
+# Check dependencies
 check_dependencies() {
     root_access
     detect_distribution
-    local dependencies=("wget" "nano" "gunzip")
-    
+    local dependencies=("wget" "nano" "gunzip" "jq")
+
     for dep in "${dependencies[@]}"; do
         if ! command -v "${dep}" &> /dev/null; then
             echo "${dep} is not installed. Installing..."
@@ -43,24 +88,15 @@ check_dependencies() {
     done
 }
 
-#Check installed service 
-check_installed() {
-    if [ -f "/etc/systemd/system/gost.service" ]; then
-        echo "The service is already installed."
-        exit 1
-    fi
-}
-
 # Get the latest version tag from GitHub releases
 get_latest_version() {
-    # Use GitHub's API to scrape the latest version tag from releases
     latest_release=$(wget -qO- https://github.com/go-gost/gost/releases | grep -oP '(?<=/go-gost/gost/releases/tag/)[^"]+' | grep 'nightly' | head -n 1)
-    
+
     if [ -z "$latest_release" ]; then
         echo "Failed to fetch the latest release version."
         exit 1
     fi
-    
+
     echo "Latest release found: $latest_release"
 }
 
@@ -68,12 +104,21 @@ get_latest_version() {
 install_gost() {
     get_latest_version
     check_dependencies
-    # Fixed the URL to remove the version from the filename
-    binary_url="https://github.com/go-gost/gost/releases/download/${latest_release}/gost-linux-amd64.tar.gz"
+    detect_architecture
+    detect_platform
+
+    # Build the download URL based on detected OS and architecture
+    binary_url="https://github.com/go-gost/gost/releases/download/${latest_release}/gost_${latest_release}_${platform}_${arch}.tar.gz"
+
     echo "Downloading gost from $binary_url"
     wget "$binary_url"
-    tar -xzf "gost-linux-amd64.tar.gz"
-    sudo mv gost-linux-amd64/gost /usr/local/bin/gost
+    if [ $? -ne 0 ]; then
+        echo "Failed to download the binary. Please check the URL or try a different architecture."
+        exit 1
+    fi
+
+    tar -xzf "gost_${latest_release}_${platform}_${arch}.tar.gz"
+    sudo mv gost-*/gost /usr/local/bin/gost
     sudo chmod +x /usr/local/bin/gost
 }
 
