@@ -12,7 +12,6 @@ root_access() {
 #Check dependencies
 check_dependencies() {
     root_access
-    detect_distribution
     local dependencies=("wget" "nano" "gunzip")
     
     for dep in "${dependencies[@]}"; do
