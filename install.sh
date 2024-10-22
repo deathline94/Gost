@@ -107,8 +107,11 @@ install_gost() {
     detect_architecture
     detect_platform
 
+    # Remove the "v" from the version in the filename
+    release_filename=$(echo "$latest_release" | sed 's/^v//')
+
     # Build the download URL based on detected OS and architecture
-    binary_url="https://github.com/go-gost/gost/releases/download/${latest_release}/gost_${latest_release}_${platform}_${arch}.tar.gz"
+    binary_url="https://github.com/go-gost/gost/releases/download/${latest_release}/gost_${release_filename}_${platform}_${arch}.tar.gz"
 
     echo "Downloading gost from $binary_url"
     wget "$binary_url"
@@ -117,7 +120,7 @@ install_gost() {
         exit 1
     fi
 
-    tar -xzf "gost_${latest_release}_${platform}_${arch}.tar.gz"
+    tar -xzf "gost_${release_filename}_${platform}_${arch}.tar.gz"
     sudo mv gost-*/gost /usr/local/bin/gost
     sudo chmod +x /usr/local/bin/gost
 }
