@@ -123,6 +123,9 @@ install_gost() {
     tar -xzf "gost_${release_filename}_${platform}_${arch}.tar.gz"
     sudo mv gost /usr/local/bin/gost
     sudo chmod +x /usr/local/bin/gost
+    sudo rm README*
+    sudo rm gost_*
+    sudo rm LICENSE*
 }
 
 #get inputs for 1
